@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${lead.name()} + ' | HR CRM'">Lead Detail | HR CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --accent:     #6366f1;
+            --accent-hover: #4f46e5;
+            --surface:    #ffffff;
+            --bg:         #f1f5f9;
+            --text:       #1e293b;
+            --muted:      #64748b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Inter, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR (same as index) ── */
+        .sidebar {
+            width: 240px; min-width: 240px;
+            background: var(--sidebar-bg);
+            display: flex; flex-direction: column;
+        }
+
+        .sidebar-brand {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .sidebar-brand .logo-text {
+            font-size: 1.15rem; font-weight: 800; color: white;
+            text-decoration: none; display: flex; align-items: center; gap: 10px;
+        }
+
+        .sidebar-brand .logo-icon {
+            width: 34px; height: 34px; background: var(--accent);
+            border-radius: 8px; display: flex; align-items: center;
+            justify-content: center; font-size: 0.9rem; color: white;
+        }
+
+        .sidebar-section {
+            padding: 20px 14px 8px;
+            font-size: 0.68rem; text-transform: uppercase;
+            letter-spacing: 1.2px; color: #475569; font-weight: 700;
+        }
+
+        .sidebar-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px; margin: 2px 8px; border-radius: 8px;
+            color: #94a3b8; text-decoration: none;
+            font-size: 0.88rem; font-weight: 500; transition: all 0.15s;
+        }
+
+        .sidebar-link:hover { background: rgba(255,255,255,0.06); color: white; }
+        .sidebar-link.active { background: var(--accent); color: white; }
+        .sidebar-link i { width: 16px; text-align: center; }
+
+        /* ── MAIN ── */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            background: white; border-bottom: 1px solid #e2e8f0;
+            padding: 14px 28px; display: flex;
+            align-items: center; gap: 14px;
+        }
+
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            color: var(--muted); text-decoration: none;
+            font-size: 0.85rem; font-weight: 500;
+            padding: 7px 12px; border-radius: 8px;
+            border: 1px solid #e2e8f0; background: white;
+            transition: all 0.15s;
+        }
+
+        .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+        .topbar-title {
+            font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 0;
+        }
+
+        /* ── CONTENT ── */
+        .content { padding: 28px; flex: 1; }
+
+        /* ── INFO CARD ── */
+        .info-card {
+            background: white; border-radius: 16px;
+            border: 1px solid #e2e8f0; overflow: hidden;
+        }
+
+        .info-card-header {
+            background: linear-gradient(120deg, #0f172a, #1e293b);
+            padding: 28px;
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        .lead-avatar {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: var(--accent); display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.6rem; font-weight: 800; color: white;
+            flex-shrink: 0; text-transform: uppercase;
+        }
+
+        .lead-header-info h2 {
+            font-size: 1.35rem; font-weight: 800; color: white; margin: 0 0 6px;
+        }
+
+        .lead-header-info .sub {
+            color: #94a3b8; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+        }
+
+        .lead-header-info .sub span {
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .info-card-body { padding: 28px; }
+
+        .info-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+        }
+
+        .info-field label {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.6px; color: var(--muted); display: block; margin-bottom: 5px;
+        }
+
+        .info-field .value {
+            font-size: 0.93rem; font-weight: 600; color: var(--text);
+        }
+
+        .info-field .value.muted { font-weight: 400; color: var(--muted); }
+
+        /* STATUS BADGES */
+        .badge-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 12px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 0.3px;
+        }
+
+        .s-NEW            { background: #eff6ff; color: #1d4ed8; }
+        .s-CONTACTED      { background: #f5f3ff; color: #7c3aed; }
+        .s-INTERESTED     { background: #fffbeb; color: #b45309; }
+        .s-CONVERTED      { background: #f0fdf4; color: #15803d; }
+        .s-NOT_INTERESTED { background: #fff7ed; color: #c2410c; }
+        .s-CLOSED         { background: #f1f5f9; color: #475569; }
+
+        /* AI LABEL */
+        .ai-score-card {
+            background: var(--bg); border-radius: 10px;
+            padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+        }
+
+        .ai-score-circle {
+            width: 52px; height: 52px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 800; flex-shrink: 0;
+        }
+
+        .ai-HOT  { background: #fef2f2; color: #dc2626; }
+        .ai-WARM { background: #fff7ed; color: #ea580c; }
+        .ai-COLD { background: #eff6ff; color: #2563eb; }
+
+        /* ── TRANSITION CARD ── */
+        .action-card {
+            background: white; border-radius: 16px;
+            border: 1px solid #e2e8f0; overflow: hidden;
+        }
+
+        .action-card-header {
+            background: #f8fafc; padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.85rem; font-weight: 700; color: var(--text);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .action-card-body { padding: 20px; }
+
+        .btn-primary-crm {
+            background: var(--accent); color: white; border: none;
+            padding: 10px 22px; border-radius: 8px; font-size: 0.88rem;
+            font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 7px;
+            transition: background 0.15s; width: 100%; justify-content: center;
+        }
+
+        .btn-primary-crm:hover { background: var(--accent-hover); }
+        .btn-primary-crm:disabled {
+            background: #e2e8f0; color: var(--muted); cursor: not-allowed;
+        }
+
+        .form-label-crm {
+            font-size: 0.78rem; font-weight: 600; color: var(--muted);
+            margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+
+        .form-control-crm {
+            border: 1.5px solid #e2e8f0; border-radius: 8px;
+            padding: 9px 12px; font-size: 0.875rem; color: var(--text);
+            transition: border-color 0.15s; width: 100%;
+        }
+
+        .form-control-crm:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1); outline: none;
+        }
+
+        .transition-steps {
+            display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;
+        }
+
+        .step-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 8px;
+            font-size: 0.82rem; font-weight: 600;
+            border: 1.5px solid #e2e8f0;
+            color: var(--muted); cursor: not-allowed; opacity: 0.5;
+        }
+
+        .step-item.available {
+            opacity: 1; cursor: pointer;
+            border-color: transparent; background: #f8fafc;
+        }
+
+        .step-item.available:hover { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
+        .step-item.current { background: #eff6ff; border-color: var(--accent); color: var(--accent); }
+
+        /* PIPELINE PROGRESS */
+        .pipeline-track {
+            display: flex; align-items: center; gap: 4px;
+            margin-bottom: 20px; padding: 16px;
+            background: #f8fafc; border-radius: 10px;
+        }
+
+        .pipeline-step {
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+            position: relative;
+        }
+
+        .pipeline-step::after {
+            content: ''; position: absolute;
+            top: 13px; left: 50%; width: 100%; height: 2px;
+            background: #e2e8f0; z-index: 0;
+        }
+
+        .pipeline-step:last-child::after { display: none; }
+
+        .step-dot {
+            width: 26px; height: 26px; border-radius: 50%; border: 2px solid #e2e8f0;
+            background: white; display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; z-index: 1; position: relative;
+            color: var(--muted); transition: all 0.2s;
+        }
+
+        .step-dot.done { background: var(--accent); border-color: var(--accent); color: white; }
+        .step-dot.active { background: white; border-color: var(--accent); color: var(--accent); border-width: 2.5px; }
+
+        .step-label {
+            font-size: 0.62rem; font-weight: 600; color: var(--muted);
+            text-align: center; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+
+        .delete-btn {
+            width: 100%; background: none; border: 1.5px solid #fca5a5;
+            color: #dc2626; border-radius: 8px; padding: 9px;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.15s; display: flex; align-items: center;
+            justify-content: center; gap: 6px; margin-top: 10px;
+        }
+
+        .delete-btn:hover { background: #fef2f2; }
+    </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <a href="/dashboard" class="logo-text">
+            <div class="logo-icon"><i class="fas fa-users"></i></div>
+            HR CRM
+        </a>
+    </div>
+    <div class="sidebar-section">Overview</div>
+    <a href="/dashboard" class="sidebar-link"><i class="fas fa-house"></i> Dashboard</a>
+    <div class="sidebar-section">Pipeline</div>
+    <a href="/leads" class="sidebar-link active"><i class="fas fa-layer-group"></i> All Leads</a>
+    <a href="/leads?status=NEW" class="sidebar-link"><i class="fas fa-circle-plus"></i> New</a>
+    <a href="/leads?status=CONTACTED" class="sidebar-link"><i class="fas fa-phone-flip"></i> Contacted</a>
+    <a href="/leads?status=INTERESTED" class="sidebar-link"><i class="fas fa-star"></i> Interested</a>
+    <a href="/leads?status=CONVERTED" class="sidebar-link"><i class="fas fa-trophy"></i> Converted</a>
+    <a href="/leads?status=CLOSED" class="sidebar-link"><i class="fas fa-lock"></i> Closed</a>
+    <div class="sidebar-section">Team</div>
+    <a href="/recruiters" class="sidebar-link"><i class="fas fa-user-tie"></i> Recruiters</a>
+    <div style="margin-top:auto;padding:16px 8px;border-top:1px solid rgba(255,255,255,0.07);">
+        <a href="/logout" class="sidebar-link" style="color:#ef4444;">
+            <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
+        </a>
+    </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <a href="/leads" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Leads
+        </a>
+        <h1 class="topbar-title" th:text="${lead.name()}"></h1>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+        <!-- FLASH MESSAGES -->
+        <div th:if="${success}" style="background:#f0fdf4;color:#15803d;border-left:4px solid #16a34a;border-radius:10px;padding:13px 18px;margin-bottom:20px;font-size:0.88rem;font-weight:600;">
+            <i class="fas fa-circle-check" style="margin-right:8px;"></i><span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" style="background:#fef2f2;color:#dc2626;border-left:4px solid #dc2626;border-radius:10px;padding:13px 18px;margin-bottom:20px;font-size:0.88rem;font-weight:600;">
+            <i class="fas fa-circle-exclamation" style="margin-right:8px;"></i><span th:text="${error}"></span>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- LEFT: LEAD INFO -->
+            <div class="col-lg-8">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <div class="lead-avatar"
+                             th:text="${#strings.substring(lead.name(), 0, 1)}">P</div>
+                        <div class="lead-header-info">
+                            <h2 th:text="${lead.name()}"></h2>
+                            <div class="sub">
+                                <span th:if="${lead.company() != null}">
+                                    <i class="fas fa-building"></i>
+                                    <span th:text="${lead.company()}"></span>
+                                </span>
+                                <span>
+                                    <i class="fas fa-phone"></i>
+                                    <span th:text="${lead.phone()}"></span>
+                                </span>
+                                <span th:if="${lead.email() != null}">
+                                    <i class="fas fa-envelope"></i>
+                                    <span th:text="${lead.email()}"></span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card-body">
+                        <!-- PIPELINE PROGRESS -->
+                        <div class="pipeline-track">
+                            <div th:each="s : ${ {'NEW','CONTACTED','INTERESTED','CONVERTED'} }"
+                                 class="pipeline-step">
+                                <div class="step-dot"
+                                     th:classappend="${lead.status().name() == s} ? ' active' :
+                                                     (${#lists.contains({'NEW','CONTACTED','INTERESTED','CONVERTED','NOT_INTERESTED','CLOSED'},lead.status().name())} ? ' done' : '')">
+                                    <i class="fas fa-check" th:if="${lead.status().name() != s}"></i>
+                                    <i class="fas fa-circle" style="font-size:0.4rem;" th:if="${lead.status().name() == s}"></i>
+                                </div>
+                                <span class="step-label" th:text="${s}"></span>
+                            </div>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-field">
+                                <label>Status</label>
+                                <div class="value">
+                                    <span class="badge-status"
+                                          th:classappend="'s-' + ${lead.status()}"
+                                          th:text="${#strings.replace(lead.status().name(), '_', ' ')}"></span>
+                                </div>
+                            </div>
+                            <div class="info-field">
+                                <label>Position Required</label>
+                                <div class="value" th:text="${lead.positionRequired()} ?: '—'"></div>
+                            </div>
+                            <div class="info-field">
+                                <label>Source</label>
+                                <div class="value"
+                                     th:text="${lead.source() != null} ? ${#strings.replace(lead.source().name(), '_', ' ')} : '—'"></div>
+                            </div>
+                            <div class="info-field">
+                                <label>Recruiter ID</label>
+                                <div class="value" th:text="${lead.recruiterId()} ?: 'Unassigned'"></div>
+                            </div>
+                            <div class="info-field">
+                                <label>Last Contacted</label>
+                                <div class="value muted"
+                                     th:text="${lead.lastContactedAt() != null} ?
+                                              ${#temporals.format(lead.lastContactedAt(), 'dd MMM yyyy, HH:mm')} : '—'"></div>
+                            </div>
+                            <div class="info-field">
+                                <label>Created</label>
+                                <div class="value muted"
+                                     th:text="${#temporals.format(lead.createdAt(), 'dd MMM yyyy')}"></div>
+                            </div>
+                        </div>
+
+                        <!-- AI SCORE -->
+                        <div class="ai-score-card mt-4" th:if="${lead.aiLabel() != null}">
+                            <div class="ai-score-circle"
+                                 th:classappend="'ai-' + ${lead.aiLabel()}"
+                                 th:text="${lead.aiScore() != null} ? ${lead.aiScore()} : '?'"></div>
+                            <div>
+                                <div style="font-weight:700;font-size:0.9rem;">AI Score</div>
+                                <div style="color:var(--muted);font-size:0.82rem;margin-top:2px;">
+                                    This lead is classified as
+                                    <strong th:text="${lead.aiLabel()}"></strong>
+                                    by the AI scoring engine.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: ACTIONS -->
+            <div class="col-lg-4">
+
+                <!-- STATUS TRANSITION -->
+                <div class="action-card mb-3">
+                    <div class="action-card-header">
+                        <i class="fas fa-route" style="color:var(--accent);"></i>
+                        Move to Next Stage
+                    </div>
+                    <div class="action-card-body">
+                        <form th:action="@{/leads/{id}/transition(id=${lead.id()})}" method="post" th:name="transitionForm">
+                            <div class="mb-3">
+                                <label class="form-label-crm">New Status</label>
+                                <select name="newStatus" class="form-control-crm form-select" required>
+                                    <option value="">— Select status —</option>
+                                    <option th:each="s : ${statuses}"
+                                            th:if="${lead.status().canTransitionTo(s)}"
+                                            th:value="${s}"
+                                            th:text="${#strings.replace(s.name(), '_', ' ')}"></option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-crm">Note <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+                                <textarea name="note" class="form-control-crm" rows="3"
+                                          placeholder="Add a note about this transition..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary-crm"
+                                    th:disabled="${lead.status().allowedTransitions().isEmpty()}">
+                                <i class="fas fa-arrow-right"></i>
+                                <span th:if="${lead.status().allowedTransitions().isEmpty()}">No transitions available</span>
+                                <span th:unless="${lead.status().allowedTransitions().isEmpty()}">Update Status</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- DANGER ZONE -->
+                <div class="action-card">
+                    <div class="action-card-header" style="color:#dc2626;">
+                        <i class="fas fa-triangle-exclamation"></i> Danger Zone
+                    </div>
+                    <div class="action-card-body">
+                        <form th:action="@{/leads/{id}/delete(id=${lead.id()})}" method="post"
+                              onsubmit="return confirm('Permanently delete this lead? This cannot be undone.')">
+                            <button type="submit" class="delete-btn">
+                                <i class="fas fa-trash-alt"></i> Delete Lead
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

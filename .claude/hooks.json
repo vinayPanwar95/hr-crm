@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "pre-commit": {
+      "command": "claude --print",
+      "prompt": "Review the staged changes. Check for: missing null checks, hardcoded secrets, missing test coverage for new public methods. If issues found, list them clearly. If clean, respond with 'OK'.",
+      "failOnOutput": false
+    },
+    "post-file-write": {
+      "pattern": "**/*.java",
+      "command": "claude --print",
+      "prompt": "A Java file was just written: {file}. Check that it follows our project conventions in CLAUDE.md. Verify: constructor injection only, no @Autowired fields, Javadoc on public methods."
+    },
+    "on-test-failure": {
+      "command": "claude --print",
+      "prompt": "Tests failed. Here's the output: {output}. Diagnose the root cause and suggest the minimal fix."
+    }
+  }
+}

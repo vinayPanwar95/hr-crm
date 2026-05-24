@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: hr-lead-service
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: ${DB_URL:jdbc:postgresql}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    hikari:
+      schema: lead_svc          # service owns this schema
+      maximum-pool-size: 10
+    driver-class-name: org.postgresql.Driver
+    jpa:
+      hibernate:
+        ddl-auto: validate
+
+server:
+  port: 8081
+
+registry:
+  enabled: true
+  url: ${REGISTRY_URL:http://localhost:8761}
+  service-name: hr-lead-service
+  service-url: ${SERVICE_URL:http://localhost:8081}
+
+logging:
+  level:
+    root: INFO
+    com.fms.hr_crm: DEBUG
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+kind: Application
+

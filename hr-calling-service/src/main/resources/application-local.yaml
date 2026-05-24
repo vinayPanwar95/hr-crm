@@ -1,0 +1,40 @@
+# Local dev overrides — only things that differ from application.yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:/hrcallingdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      schema: PUBLIC
+      maximum-pool-size: 5
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+
+# encryption.key left blank — ephemeral random AES key generated at startup
+# NOTE: encrypted phone numbers stored in the file DB won't be decryptable after restart
+# unless a fixed ENCRYPTION_KEY is set in the environment.
+encryption:
+  key: ${ENCRYPTION_KEY:}
+
+# Trust X-Forwarded-* headers from ngrok so request.getRequestURL()
+# returns the public HTTPS URL that Twilio signed, not http://localhost:8083
+server:
+  forward-headers-strategy: native
+
+# Lead service URL fallback for local dev
+services:
+  lead-service:
+    url: ${LEAD_SERVICE_URL:http://localhost:8081}

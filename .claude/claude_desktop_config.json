@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "hr-crm": {
+      "command": "node",
+      "args": ["/path/to/hr-crm/hr-mcp-server/build/index.js"],
+      "env": {
+        "DATABASE_URL": "postgresql://localhost:5432/hrcrm"
+      }
+    }
+  }
+}

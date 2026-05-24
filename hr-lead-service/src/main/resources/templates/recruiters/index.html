@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruiters | HR CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --accent:     #6366f1;
+            --accent-hover: #4f46e5;
+            --green:      #10b981;
+            --bg:         #f1f5f9;
+            --text:       #1e293b;
+            --muted:      #64748b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Inter, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .sidebar-brand .logo-text {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-brand .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .sidebar-section {
+            padding: 20px 14px 8px;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #475569;
+            font-weight: 700;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .sidebar-link:hover { background: rgba(255,255,255,0.06); color: white; }
+        .sidebar-link.active { background: var(--accent); color: white; }
+        .sidebar-link i { width: 16px; text-align: center; }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 16px 8px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+
+        /* ── MAIN ── */
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        .topbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .topbar h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .btn-primary-crm {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: background 0.15s;
+            text-decoration: none;
+        }
+
+        .btn-primary-crm:hover { background: var(--accent-hover); color: white; }
+
+        .content { padding: 28px; flex: 1; }
+
+        /* ── STAT BANNER ── */
+        .stat-banner {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-tile {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-tile-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .stat-tile-icon.green  { background: #ecfdf5; color: var(--green); }
+        .stat-tile-icon.indigo { background: #eff6ff; color: var(--accent); }
+        .stat-tile-icon.gray   { background: #f1f5f9; color: var(--muted); }
+
+        .stat-tile-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+        }
+
+        .stat-tile-val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.1;
+        }
+
+        /* ── TABLE ── */
+        .table-card {
+            background: white;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .table { margin: 0; font-size: 0.875rem; }
+
+        .table thead th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            border-top: none;
+        }
+
+        .table tbody td {
+            padding: 14px 16px;
+            border-color: #f1f5f9;
+            vertical-align: middle;
+            color: var(--text);
+        }
+
+        .table tbody tr:hover { background: #fafbff; }
+        .table tbody tr:last-child td { border-bottom: none; }
+
+        .recruiter-name { font-weight: 600; }
+        .recruiter-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+        .badge-active   { background: #f0fdf4; color: #15803d; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-inactive { background: #f1f5f9; color: #64748b; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; }
+
+        .leads-pill {
+            background: #eff6ff;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 10px;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            width: 32px; height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.82rem;
+        }
+
+        .action-btn:hover { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--muted);
+        }
+
+        .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; opacity: 0.3; }
+        .empty-state h6 { font-weight: 700; color: var(--text); }
+
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.83rem;
+            color: var(--muted);
+        }
+
+        .page-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            color: var(--text);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+
+        .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .page-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+        /* ── MODAL ── */
+        .modal-header-crm {
+            background: var(--sidebar-bg);
+            color: white;
+            border: none;
+            padding: 20px 24px;
+        }
+
+        .modal-header-crm .modal-title { font-weight: 700; font-size: 1rem; }
+        .modal-header-crm .btn-close { filter: brightness(0) invert(1); opacity: 0.7; }
+
+        .form-label-crm { font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 5px; }
+
+        .form-control-crm {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 0.875rem;
+            color: var(--text);
+            transition: border-color 0.15s;
+        }
+
+        .form-control-crm:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <a href="/dashboard" class="logo-text">
+            <div class="logo-icon"><i class="fas fa-users"></i></div>
+            HR CRM
+        </a>
+    </div>
+
+    <div class="sidebar-section">Overview</div>
+    <a href="/dashboard" class="sidebar-link">
+        <i class="fas fa-house"></i> Dashboard
+    </a>
+
+    <div class="sidebar-section">Pipeline</div>
+    <a href="/leads" class="sidebar-link">
+        <i class="fas fa-layer-group"></i> All Leads
+    </a>
+    <a href="/leads?status=NEW" class="sidebar-link">
+        <i class="fas fa-circle-plus"></i> New
+    </a>
+    <a href="/leads?status=CONTACTED" class="sidebar-link">
+        <i class="fas fa-phone-flip"></i> Contacted
+    </a>
+    <a href="/leads?status=INTERESTED" class="sidebar-link">
+        <i class="fas fa-star"></i> Interested
+    </a>
+    <a href="/leads?status=CONVERTED" class="sidebar-link">
+        <i class="fas fa-trophy"></i> Converted
+    </a>
+    <a href="/leads?status=CLOSED" class="sidebar-link">
+        <i class="fas fa-lock"></i> Closed
+    </a>
+
+    <div class="sidebar-section">Team</div>
+    <a href="/recruiters" class="sidebar-link active">
+        <i class="fas fa-user-tie"></i> Recruiters
+    </a>
+
+    <div class="sidebar-bottom">
+        <a href="/logout" class="sidebar-link" style="color:#ef4444;">
+            <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
+        </a>
+    </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <h1><i class="fas fa-user-tie" style="color:var(--accent);margin-right:8px;"></i>Recruiter Dashboard</h1>
+        <button type="button" class="btn-primary-crm" data-bs-toggle="modal" data-bs-target="#addRecruiterModal">
+            <i class="fas fa-user-plus"></i> Add Recruiter
+        </button>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- FLASH MESSAGES -->
+        <div th:if="${success}" class="alert alert-dismissible fade show"
+             style="border-radius:10px;border:none;background:#f0fdf4;color:#15803d;border-left:4px solid #16a34a;padding:14px 18px;margin-bottom:20px;"
+             role="alert">
+            <i class="fas fa-circle-check" style="margin-right:8px;"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-dismissible fade show"
+             style="border-radius:10px;border:none;background:#fef2f2;color:#dc2626;border-left:4px solid #dc2626;padding:14px 18px;margin-bottom:20px;"
+             role="alert">
+            <i class="fas fa-circle-exclamation" style="margin-right:8px;"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- STAT BANNER -->
+        <div class="stat-banner">
+            <div class="stat-tile">
+                <div class="stat-tile-icon green"><i class="fas fa-user-tie"></i></div>
+                <div>
+                    <div class="stat-tile-label">Total Recruiters</div>
+                    <div class="stat-tile-val" th:text="${recruiters.totalElements}">0</div>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-icon indigo"><i class="fas fa-circle-check"></i></div>
+                <div>
+                    <div class="stat-tile-label">Active</div>
+                    <div class="stat-tile-val"
+                         th:text="${#lists.size(recruiters.content.?[active == true])}">0</div>
+                </div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-icon gray"><i class="fas fa-circle-xmark"></i></div>
+                <div>
+                    <div class="stat-tile-label">Inactive</div>
+                    <div class="stat-tile-val"
+                         th:text="${#lists.size(recruiters.content.?[active == false])}">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECRUITERS TABLE -->
+        <div class="table-card">
+            <table class="table" th:if="${!recruiters.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Recruiter</th>
+                        <th>Phone</th>
+                        <th>Leads Assigned</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r, i : ${recruiters.content}">
+                        <td style="color:var(--muted);font-size:0.8rem;"
+                            th:text="${recruiters.number * 20 + i.index + 1}"></td>
+                        <td>
+                            <div class="recruiter-name" th:text="${r.name()}"></div>
+                            <div class="recruiter-sub" th:text="${r.email()} ?: ''"></div>
+                        </td>
+                        <td style="color:var(--muted);" th:text="${r.phone()} ?: '—'"></td>
+                        <td>
+                            <span class="leads-pill" th:text="${r.leadsAssigned()} + ' leads'"></span>
+                        </td>
+                        <td>
+                            <span th:if="${r.active()}" class="badge-active">
+                                <i class="fas fa-circle" style="font-size:0.5rem;"></i> Active
+                            </span>
+                            <span th:unless="${r.active()}" class="badge-inactive">
+                                <i class="fas fa-circle" style="font-size:0.5rem;"></i> Inactive
+                            </span>
+                        </td>
+                        <td>
+                            <form th:if="${r.active()}"
+                                  th:action="@{/recruiters/{id}/deactivate(id=${r.id()})}" method="post"
+                                  onsubmit="return confirm('Deactivate this recruiter? They will no longer receive new leads.')">
+                                <button type="submit" class="action-btn" title="Deactivate">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- EMPTY STATE -->
+            <div class="empty-state" th:if="${recruiters.isEmpty()}">
+                <i class="fas fa-user-tie"></i>
+                <h6>No recruiters yet</h6>
+                <p>Add your first recruiter to start assigning leads.</p>
+                <button type="button" class="btn-primary-crm" style="margin-top:8px;"
+                        data-bs-toggle="modal" data-bs-target="#addRecruiterModal">
+                    <i class="fas fa-user-plus"></i> Add Recruiter
+                </button>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="pagination-bar" th:if="${!recruiters.isEmpty()}">
+                <span>
+                    Showing <strong th:text="${recruiters.numberOfElements}"></strong>
+                    of <strong th:text="${recruiters.totalElements}"></strong> recruiters
+                </span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <a th:href="@{/recruiters(page=${recruiters.number - 1})}"
+                       class="page-btn"
+                       th:classappend="${recruiters.first} ? ' disabled'">
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </a>
+                    <span th:text="'Page ' + ${recruiters.number + 1} + ' of ' + ${recruiters.totalPages}"></span>
+                    <a th:href="@{/recruiters(page=${recruiters.number + 1})}"
+                       class="page-btn"
+                       th:classappend="${recruiters.last} ? ' disabled'">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── ADD RECRUITER MODAL ── -->
+<div class="modal fade" id="addRecruiterModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;">
+            <div class="modal-header-crm">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus" style="color:#a5b4fc;margin-right:8px;"></i>Onboard New Recruiter
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:28px;">
+                <form th:action="@{/recruiters}" method="post">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label-crm">Full Name <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="name" class="form-control form-control-crm"
+                                   placeholder="e.g. Rahul Mehta" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Email</label>
+                            <input type="email" name="email" class="form-control form-control-crm"
+                                   placeholder="rahul@company.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Phone</label>
+                            <input type="text" name="phone" class="form-control form-control-crm"
+                                   placeholder="+91 98765 43210">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label-crm">
+                                Login Password <span style="color:#ef4444;">*</span>
+                                <span style="font-weight:400;color:#64748b;font-size:0.75rem;">
+                                    — one-time password for Call Center login (recruiter must change on first login)
+                                </span>
+                            </label>
+                            <div style="position:relative;">
+                                <input type="password" id="loginPasswordInput" name="loginPassword"
+                                       class="form-control form-control-crm"
+                                       placeholder="Min. 8 characters" required minlength="8"
+                                       style="padding-right:42px;">
+                                <button type="button" onclick="togglePw()"
+                                        style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                                               background:none;border:none;color:#94a3b8;cursor:pointer;padding:0;">
+                                    <i class="fas fa-eye" id="pwEyeIcon"></i>
+                                </button>
+                            </div>
+                            <div style="font-size:0.75rem;color:#64748b;margin-top:4px;">
+                                <i class="fas fa-circle-info" style="color:#6366f1;"></i>
+                                This password is sent to the Call Center service. It is NOT stored here.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-primary-crm">
+                            <i class="fas fa-user-check"></i> Onboard Recruiter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function togglePw() {
+    var input = document.getElementById('loginPasswordInput');
+    var icon  = document.getElementById('pwEyeIcon');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'fas fa-eye-slash';
+    } else {
+      input.type = 'password';
+      icon.className = 'fas fa-eye';
+    }
+  }
+</script>
+</body>
+</html>

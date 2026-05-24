@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Call Logs — HR CRM</title>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    :root {
+      --sidebar-bg: #0f172a;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+    }
+    body { background: #f1f5f9; font-family: 'Inter', sans-serif; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 240px;
+      background: var(--sidebar-bg); padding: 0; z-index: 100; overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 20px 20px; border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-brand .icon { font-size: 1.5rem; color: var(--accent); }
+    .sidebar-brand .name { color: #fff; font-weight: 700; font-size: 1.1rem; }
+    .sidebar-brand .sub  { color: #94a3b8; font-size: .75rem; display: block; }
+    .nav-section { padding: 16px 16px 4px; color: #64748b; font-size: .7rem;
+                   font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+    .nav-item a {
+      display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+      color: #94a3b8; text-decoration: none; border-radius: 8px; margin: 2px 8px;
+      font-size: .875rem; transition: all .15s;
+    }
+    .nav-item a:hover, .nav-item a.active {
+      background: rgba(99,102,241,.15); color: #fff;
+    }
+    .nav-item a .icon { width: 18px; text-align: center; }
+
+    /* ── Main ── */
+    .main { margin-left: 240px; padding: 24px; min-height: 100vh; }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    }
+    .page-header h1 { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
+
+    /* ── Stat cards ── */
+    .stat-card {
+      background: #fff; border-radius: 12px; padding: 20px 24px;
+      border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 16px;
+    }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .stat-value { font-size: 1.75rem; font-weight: 700; color: #0f172a; line-height: 1; }
+    .stat-label { font-size: .8rem; color: #64748b; margin-top: 2px; }
+
+    /* ── Filters ── */
+    .filter-bar { background: #fff; border-radius: 12px; padding: 16px 20px;
+                  border: 1px solid #e2e8f0; margin-bottom: 20px; }
+
+    /* ── Table ── */
+    .table-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .table-card .table { margin: 0; }
+    .table thead th {
+      background: #f8fafc; color: #64748b; font-size: .75rem;
+      font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+      border-bottom: 1px solid #e2e8f0; padding: 12px 16px;
+    }
+    .table tbody td { padding: 14px 16px; vertical-align: middle; border-bottom: 1px solid #f1f5f9; }
+    .table tbody tr:last-child td { border-bottom: none; }
+    .table tbody tr:hover td { background: #f8fafc; }
+
+    /* ── Status badges ── */
+    .badge-status {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600;
+    }
+    .badge-COMPLETED   { background: #dcfce7; color: #166534; }
+    .badge-IN_PROGRESS { background: #dbeafe; color: #1e40af; }
+    .badge-INITIATED   { background: #e0e7ff; color: #3730a3; }
+    .badge-RINGING     { background: #fef9c3; color: #854d0e; }
+    .badge-FAILED      { background: #fee2e2; color: #991b1b; }
+    .badge-NO_ANSWER   { background: #f3f4f6; color: #374151; }
+    .badge-BUSY        { background: #fef3c7; color: #92400e; }
+    .badge-CANCELED    { background: #f3f4f6; color: #6b7280; }
+
+    /* ── Call tag ── */
+    .tag-pill {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: .7rem; font-weight: 600; background: #ede9fe; color: #6d28d9;
+    }
+    .tag-HOT_LEAD   { background: #fee2e2; color: #991b1b; }
+    .tag-CALL_BACK  { background: #fef3c7; color: #92400e; }
+    .tag-BRIEF_CALL { background: #e0e7ff; color: #3730a3; }
+    .tag-NO_RESPONSE{ background: #f3f4f6; color: #374151; }
+    .tag-CONTACTED  { background: #dcfce7; color: #166534; }
+
+    /* ── Pagination ── */
+    .pagination { margin: 16px; justify-content: center; }
+
+    /* ── Flash messages ── */
+    .alert { border-radius: 10px; }
+
+    /* ── Browser call panel ── */
+    .browser-call-panel {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      border-radius: 12px; padding: 20px 24px; color: #fff; margin-bottom: 20px;
+    }
+    .call-btn {
+      background: #fff; color: var(--accent); border: none;
+      padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+      transition: all .15s;
+    }
+    .call-btn:hover { background: #e0e7ff; }
+    .call-btn.active { background: #fee2e2; color: #dc2626; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────────────── -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <i class="fa-solid fa-phone-volume icon"></i>
+    <div>
+      <div class="name">Call Center</div>
+      <span class="sub">HR CRM</span>
+    </div>
+  </div>
+
+  <div class="nav-section">Navigation</div>
+  <ul class="nav-item list-unstyled mb-0">
+    <li><a href="/calls/leads"><i class="fa-solid fa-users icon"></i> Leads</a></li>
+    <li><a href="/calls" class="active"><i class="fa-solid fa-phone icon"></i> Call Logs</a></li>
+  </ul>
+
+  <div class="nav-section mt-3">AI</div>
+  <ul class="nav-item list-unstyled mb-0">
+    <li><a href="/campaigns"><i class="fa-solid fa-robot icon"></i> AI Campaigns</a></li>
+  </ul>
+
+  <div class="nav-section mt-3">Filter by Status</div>
+
+  <ul class="nav-item list-unstyled mb-0">
+    <li><a th:href="@{/calls}">
+      <i class="fa-solid fa-list icon"></i> All Calls
+    </a></li>
+    <li th:each="s : ${statuses}">
+      <a th:href="@{/calls(status=${s})}" th:classappend="${selectedStatus == s} ? 'active' : ''">
+        <i class="fa-solid fa-circle icon" style="font-size:.5rem;"></i>
+        <span th:text="${s}">STATUS</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="sidebar-spacer"></div>
+
+  <!-- Logout -->
+  <div style="padding:16px;border-top:1px solid rgba(255,255,255,.08);">
+    <form th:action="@{/logout}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit"
+              style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 16px;
+                     background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:8px;
+                     color:#94a3b8;font-size:.875rem;cursor:pointer;transition:all .15s;"
+              onmouseover="this.style.background='rgba(239,68,68,.15)';this.style.color='#fca5a5';"
+              onmouseout="this.style.background='transparent';this.style.color='#94a3b8';">
+        <i class="fa-solid fa-right-from-bracket" style="width:18px;text-align:center;"></i>
+        Logout
+      </button>
+    </form>
+  </div>
+</nav>
+
+<!-- ── Main Content ─────────────────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- Flash messages -->
+  <div th:if="${mustChangePasswordWarning}" class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="fa-solid fa-key me-2"></i>
+    <strong>Action required:</strong> Your account was created with a temporary password.
+    <a href="/auth/change-password" class="alert-link ms-1">Change your password now</a> before continuing.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fa-solid fa-circle-check me-2"></i>
+    <span th:text="${success}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+    <span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1><i class="fa-solid fa-phone-volume me-2" style="color:var(--accent)"></i>Call Logs</h1>
+      <p class="text-muted mb-0" style="font-size:.875rem;">Click-to-call with number masking — recruiter never sees the lead's real number</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#callModal"
+            style="background:var(--accent);border-color:var(--accent);">
+      <i class="fa-solid fa-phone-flip me-2"></i>New Call
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#ede9fe;"><i class="fa-solid fa-phone" style="color:#6366f1;"></i></div>
+        <div>
+          <div class="stat-value" th:text="${totalCalls}">0</div>
+          <div class="stat-label">Total Calls</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#dcfce7;"><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i></div>
+        <div>
+          <div class="stat-value" th:text="${completedCalls}">0</div>
+          <div class="stat-label">Completed</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#dbeafe;"><i class="fa-solid fa-headset" style="color:#3b82f6;"></i></div>
+        <div>
+          <div class="stat-value" th:text="${inProgressCalls}">0</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fee2e2;"><i class="fa-solid fa-phone-slash" style="color:#dc2626;"></i></div>
+        <div>
+          <div class="stat-value" th:text="${failedCalls}">0</div>
+          <div class="stat-label">Failed / No Answer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Call panel — server-initiated call (always available) -->
+  <div class="browser-call-panel mb-4">
+    <div class="row align-items-center g-3">
+      <div class="col-md-5">
+        <h6 class="mb-1 fw-bold"><i class="fa-solid fa-phone-flip me-2"></i>Quick Call</h6>
+        <p class="mb-0" style="font-size:.85rem;opacity:.85;">
+          Pick a lead from your queue and click <strong>Initiate Call</strong> — the real number is never shown.
+        </p>
+      </div>
+      <div class="col-md-7">
+        <form th:action="@{/calls/initiate}" method="post" class="d-flex align-items-center gap-2 flex-wrap">
+          <div style="position:relative;flex:1;min-width:200px;">
+            <input type="text" id="leadSearch" class="form-control form-control-sm"
+                   placeholder="Search lead by name…" autocomplete="off"
+                   oninput="filterLeads(this.value)"/>
+            <input type="hidden" name="leadId" id="selectedLeadId" required/>
+            <div id="leadDropdown" style="
+                position:absolute;top:100%;left:0;right:0;background:#fff;
+                border:1px solid #e2e8f0;border-radius:8px;max-height:220px;
+                overflow-y:auto;z-index:200;display:none;box-shadow:0 4px 16px rgba(0,0,0,.1);">
+            </div>
+          </div>
+          <input type="tel" name="recruiterPhone" class="form-control form-control-sm"
+                 placeholder="Your phone (optional)" style="width:180px;"/>
+          <button type="submit" class="call-btn" style="white-space:nowrap;">
+            <i class="fa-solid fa-phone-flip me-1"></i> Initiate Call
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Assigned leads list (pre-loaded from server) -->
+    <div th:if="${!#lists.isEmpty(recruiterLeads)}" style="margin-top:14px;">
+      <div style="font-size:.78rem;color:rgba(255,255,255,.6);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+        Your Assigned Leads (<span th:text="${#lists.size(recruiterLeads)}">0</span>)
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button type="button" th:each="lead : ${recruiterLeads}"
+                onclick="selectLead(this)"
+                th:attr="data-id=${lead.id()}, data-name=${lead.name()}"
+                style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+                       color:#fff;border-radius:20px;padding:3px 12px;font-size:.78rem;cursor:pointer;
+                       transition:all .15s;"
+                onmouseover="this.style.background='rgba(99,102,241,.4)'"
+                onmouseout="this.style.background='rgba(255,255,255,.12)'">
+          <i class="fa-solid fa-user me-1" style="font-size:.7rem;"></i>
+          <span th:text="${lead.name()}">Lead</span>
+          <span th:text="'#' + ${lead.id()}" style="opacity:.6;margin-left:4px;"></span>
+          <span th:text="${lead.status()}"
+                style="font-size:.68rem;opacity:.7;margin-left:4px;
+                       background:rgba(0,0,0,.2);border-radius:4px;padding:1px 5px;">STATUS</span>
+        </button>
+      </div>
+    </div>
+    <div th:if="${#lists.isEmpty(recruiterLeads)}"
+         style="margin-top:10px;font-size:.82rem;color:rgba(255,255,255,.5);">
+      <i class="fa-solid fa-circle-info me-1"></i>
+      No leads assigned to you yet. Add leads from the
+      <a href="http://localhost:8081/leads" style="color:rgba(255,255,255,.75);">Lead Pipeline</a>.
+    </div>
+
+    <!-- Browser-based WebRTC calling (requires Twilio API keys configured) -->
+    <hr style="border-color:rgba(255,255,255,.2);margin:16px 0 12px;"/>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <span style="font-size:.82rem;opacity:.8;">
+          <i class="fa-solid fa-globe me-1"></i>Browser WebRTC — call from the browser without a phone
+        </span>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div id="browser-call-status" style="font-size:.8rem;opacity:.85;">Initializing…</div>
+        <button class="call-btn" id="browser-call-toggle" onclick="toggleBrowserCall()">
+          <i class="fa-solid fa-plug me-1"></i> Connect SDK
+        </button>
+      </div>
+    </div>
+    <!-- Active browser call controls -->
+    <div id="browser-call-controls" class="mt-2 d-none">
+      <div class="d-flex align-items-center gap-3">
+        <input type="number" id="browser-lead-id" class="form-control form-control-sm"
+               placeholder="Lead ID to call" style="width:160px;"/>
+        <button class="call-btn" id="browser-call-btn" onclick="startBrowserCall()">
+          <i class="fa-solid fa-phone-flip me-1"></i> Call via Browser
+        </button>
+        <button class="call-btn" id="browser-hangup-btn" onclick="hangupBrowserCall()"
+                style="display:none;background:#fee2e2;color:#dc2626;">
+          <i class="fa-solid fa-phone-slash me-1"></i> Hang Up
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Call log table -->
+  <div class="table-card">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Session ID</th>
+          <th>Lead ID</th>
+          <th>Recruiter ID</th>
+          <th>Status</th>
+          <th>Tag</th>
+          <th>Duration</th>
+          <th>Recording</th>
+          <th>Started</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:if="${calls.isEmpty()}">
+          <td colspan="9" class="text-center py-5 text-muted">
+            <i class="fa-solid fa-phone-slash fa-2x mb-2 d-block" style="color:#cbd5e1;"></i>
+            No call sessions yet. Click <strong>New Call</strong> to initiate one.
+          </td>
+        </tr>
+        <tr th:each="c : ${calls}">
+          <td>
+            <a th:href="@{/calls/{id}(id=${c.id})}"
+               style="font-family:monospace;font-size:.8rem;color:var(--accent);"
+               th:text="${#strings.substring(c.id.toString(), 0, 8) + '…'}">id</a>
+          </td>
+          <td>
+            <a th:href="@{/leads/{id}(id=${c.leadId})}"
+               class="text-decoration-none fw-semibold"
+               th:text="'#' + ${c.leadId}">Lead</a>
+          </td>
+          <td>
+            <span class="badge rounded-pill" style="background:#ede9fe;color:#6d28d9;"
+                  th:text="'R' + ${c.recruiterId}">R1</span>
+          </td>
+          <td>
+            <span class="badge-status"
+                  th:classappend="'badge-' + ${c.status}"
+                  th:text="${c.status}">STATUS</span>
+          </td>
+          <td>
+            <span th:if="${c.callTag != null}" class="tag-pill"
+                  th:classappend="'tag-' + ${c.callTag}"
+                  th:text="${c.callTag}">TAG</span>
+            <span th:if="${c.callTag == null}" class="text-muted" style="font-size:.8rem;">—</span>
+          </td>
+          <td>
+            <span th:if="${c.durationSeconds != null}"
+                  th:text="${c.durationSeconds + 's'}">0s</span>
+            <span th:if="${c.durationSeconds == null}" class="text-muted">—</span>
+          </td>
+          <td>
+            <a th:if="${c.recordingUrl != null}" th:href="${c.recordingUrl}"
+               target="_blank" class="text-decoration-none" style="color:var(--accent);">
+              <i class="fa-solid fa-circle-play me-1"></i>Play
+            </a>
+            <span th:if="${c.recordingUrl == null}" class="text-muted" style="font-size:.8rem;">—</span>
+          </td>
+          <td style="font-size:.8rem;color:#64748b;">
+            <span th:if="${c.startedAt != null}"
+                  th:text="${#temporals.format(c.startedAt, 'dd MMM HH:mm')}">date</span>
+            <span th:if="${c.startedAt == null}">—</span>
+          </td>
+          <td class="d-flex gap-1 align-items-center">
+            <a th:href="@{/calls/{id}(id=${c.id})}" class="btn btn-sm"
+               style="background:#ede9fe;color:#6d28d9;border:none;" title="View detail">
+              <i class="fa-solid fa-eye"></i>
+            </a>
+            <!-- Cancel button — only shown for active (cancelable) states -->
+            <form th:if="${c.status.name() == 'RINGING' or c.status.name() == 'INITIATED' or c.status.name() == 'IN_PROGRESS'}"
+                  th:action="@{/calls/{id}/cancel(id=${c.id})}" method="post" style="margin:0;">
+              <button type="submit" class="btn btn-sm" title="Cancel call"
+                      style="background:#fee2e2;color:#dc2626;border:none;"
+                      onclick="return confirm('Cancel this call?')">
+                <i class="fa-solid fa-phone-slash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <nav th:if="${calls.totalPages > 1}" class="pagination">
+      <ul class="pagination mb-0">
+        <li class="page-item" th:classappend="${calls.first} ? 'disabled'">
+          <a class="page-link" th:href="@{/calls(page=${calls.number - 1})}">
+            <i class="fa-solid fa-chevron-left"></i>
+          </a>
+        </li>
+        <li class="page-item" th:each="i : ${#numbers.sequence(0, calls.totalPages - 1)}"
+            th:classappend="${i == calls.number} ? 'active'">
+          <a class="page-link" th:href="@{/calls(page=${i})}" th:text="${i + 1}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${calls.last} ? 'disabled'">
+          <a class="page-link" th:href="@{/calls(page=${calls.number + 1})}">
+            <i class="fa-solid fa-chevron-right"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+</main>
+
+<!-- ── New Call Modal ────────────────────────────────────────────────────────── -->
+<div class="modal fade" id="callModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="border-radius:16px;">
+      <div class="modal-header" style="background:var(--accent);color:#fff;border-radius:16px 16px 0 0;">
+        <h5 class="modal-title"><i class="fa-solid fa-phone-flip me-2"></i>Initiate Call</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form th:action="@{/calls/initiate}" method="post">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Lead ID <span class="text-danger">*</span></label>
+            <input type="number" name="leadId" class="form-control" placeholder="e.g. 42" required/>
+            <div class="form-text text-muted">The real phone number is fetched securely — you won't see it.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Your Callback Number</label>
+            <input type="tel" name="recruiterPhone" class="form-control" placeholder="+1 555 000 0000"/>
+            <div class="form-text text-muted">
+              Twilio will call this number first, then connect you to the lead.
+              Leave blank for browser-based calling.
+            </div>
+          </div>
+          <div class="alert alert-info py-2 px-3" style="font-size:.82rem;border-radius:8px;">
+            <i class="fa-solid fa-shield-halved me-1"></i>
+            The lead's real number is <strong>never</strong> shown to recruiters.
+            Twilio bridges the call using a virtual number.
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid #f1f5f9;">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary"
+                  style="background:var(--accent);border-color:var(--accent);">
+            <i class="fa-solid fa-phone-flip me-1"></i>Call Now
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Twilio Client SDK for browser-based calling -->
+<script src="https://sdk.twilio.com/js/client/v1.14/twilio.min.js"></script>
+<script th:inline="javascript">
+  // ── Lead picker ─────────────────────────────────────────────────────────────
+  const ALL_LEADS = /*[[${recruiterLeads}]]*/ [];
+
+  function selectLead(btn) {
+    document.getElementById('selectedLeadId').value = btn.dataset.id;
+    document.getElementById('leadSearch').value = btn.dataset.name + ' #' + btn.dataset.id;
+    document.getElementById('leadDropdown').style.display = 'none';
+    // highlight selected chip
+    document.querySelectorAll('[data-id]').forEach(b => b.style.fontWeight = '');
+    btn.style.fontWeight = '700';
+  }
+
+  function filterLeads(query) {
+    const dd = document.getElementById('leadDropdown');
+    document.getElementById('selectedLeadId').value = '';
+    if (!query || query.length < 1) { dd.style.display = 'none'; return; }
+    const q = query.toLowerCase();
+    const matches = ALL_LEADS.filter(l =>
+      (l.name && l.name.toLowerCase().includes(q)) ||
+      String(l.id).includes(q)
+    );
+    if (matches.length === 0) { dd.style.display = 'none'; return; }
+    dd.innerHTML = matches.map(l => `
+      <div onclick="pickDropdownLead(${l.id},'${escHtml(l.name)}')"
+           style="padding:9px 14px;cursor:pointer;font-size:.855rem;display:flex;justify-content:space-between;align-items:center;"
+           onmouseover="this.style.background='#f1f5ff'"
+           onmouseout="this.style.background=''">
+        <span><strong>${escHtml(l.name)}</strong> <span style="color:#94a3b8;">#${l.id}</span></span>
+        <span style="font-size:.72rem;background:#ede9fe;color:#6d28d9;border-radius:4px;padding:2px 7px;">${l.status}</span>
+      </div>`).join('');
+    dd.style.display = 'block';
+  }
+
+  function pickDropdownLead(id, name) {
+    document.getElementById('selectedLeadId').value = id;
+    document.getElementById('leadSearch').value = name + ' #' + id;
+    document.getElementById('leadDropdown').style.display = 'none';
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#leadSearch') && !e.target.closest('#leadDropdown')) {
+      document.getElementById('leadDropdown').style.display = 'none';
+    }
+  });
+
+  // ── Twilio ──────────────────────────────────────────────────────────────────
+  const BROWSER_TOKEN = /*[[${browserToken}]]*/ '';
+  let twilioDevice = null;
+  let activeCall   = null;
+
+  function toggleBrowserCall() {
+    if (twilioDevice && twilioDevice.state === 'registered') {
+      twilioDevice.unregister();
+      document.getElementById('browser-call-controls').classList.add('d-none');
+      document.getElementById('browser-call-status').textContent = 'Disconnected';
+      document.getElementById('browser-call-toggle').innerHTML = '<i class="fa-solid fa-phone me-1"></i> Connect';
+    } else {
+      initDevice();
+    }
+  }
+
+  function initDevice() {
+    if (!BROWSER_TOKEN || BROWSER_TOKEN.startsWith('stub-token')) {
+      document.getElementById('browser-call-status').textContent = 'Not configured (set TWILIO_API_KEY_SID)';
+      return;
+    }
+    try {
+      twilioDevice = new Twilio.Device(BROWSER_TOKEN, { edge: 'ashburn' });
+
+      twilioDevice.on('ready', () => {
+        document.getElementById('browser-call-status').textContent = 'Ready';
+        document.getElementById('browser-call-controls').classList.remove('d-none');
+        document.getElementById('browser-call-toggle').innerHTML = '<i class="fa-solid fa-phone-slash me-1"></i> Disconnect';
+      });
+
+      twilioDevice.on('error', (err) => {
+        document.getElementById('browser-call-status').textContent = 'Error: ' + err.message;
+      });
+
+      twilioDevice.on('disconnect', () => {
+        activeCall = null;
+        document.getElementById('browser-call-btn').style.display = '';
+        document.getElementById('browser-hangup-btn').style.display = 'none';
+        document.getElementById('browser-call-status').textContent = 'Ready';
+      });
+
+      twilioDevice.register();
+      document.getElementById('browser-call-status').textContent = 'Connecting…';
+    } catch (e) {
+      document.getElementById('browser-call-status').textContent = 'SDK error: ' + e.message;
+    }
+  }
+
+  function startBrowserCall() {
+    const leadId = document.getElementById('browser-lead-id').value;
+    if (!leadId) { alert('Enter a Lead ID'); return; }
+    if (!twilioDevice) { alert('Device not connected'); return; }
+
+    activeCall = twilioDevice.connect({ params: { leadId, tenantId: '1' } });
+    document.getElementById('browser-call-btn').style.display = 'none';
+    document.getElementById('browser-hangup-btn').style.display = '';
+    document.getElementById('browser-call-status').textContent = 'Calling lead #' + leadId + '…';
+  }
+
+  function hangupBrowserCall() {
+    if (activeCall) activeCall.disconnect();
+    if (twilioDevice) twilioDevice.disconnectAll();
+  }
+</script>
+</body>
+</html>

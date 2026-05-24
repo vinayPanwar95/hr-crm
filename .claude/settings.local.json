@@ -1,0 +1,6 @@
+{
+  "enabledMcpjsonServers": [
+    "hr-crm"
+  ],
+  "enableAllProjectMcpServers": true
+}

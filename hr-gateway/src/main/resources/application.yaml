@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: hr-gateway
+  cloud:
+    gateway:
+      # Using static URIs instead of lb:// because Spring Cloud 2024.0.0 is
+      # incompatible with Spring Boot 4.x LoadBalancer. URLs are configurable
+      # via environment variables for each deployment environment.
+      routes:
+        - id: lead-service
+          uri: ${LEAD_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/leads/**
+        - id: ai-service
+          uri: ${AI_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/ai/**
+        - id: calling-service
+          uri: ${CALLING_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/calls/**
+        - id: whatsapp-service
+          uri: ${WHATSAPP_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/whatsapp/**
+        - id: ops-service
+          uri: ${OPS_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/ops/**
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.fms.hr_crm: DEBUG

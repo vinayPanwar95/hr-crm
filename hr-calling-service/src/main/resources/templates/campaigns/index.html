@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>AI Campaigns — HR CRM</title>
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    :root {
+      --sidebar-bg: #0f172a;
+      --accent:     #6366f1;
+      --accent-h:   #4f46e5;
+      --green:      #10b981;
+      --orange:     #f59e0b;
+      --red:        #ef4444;
+    }
+    body { background: #f1f5f9; font-family: 'Inter', sans-serif; margin: 0; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 240px;
+      background: var(--sidebar-bg); z-index: 100; overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 20px 20px; border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-brand .icon { font-size: 1.5rem; color: var(--accent); }
+    .sidebar-brand .name { color: #fff; font-weight: 700; font-size: 1.1rem; }
+    .nav-section { padding: 16px 16px 4px; color: #64748b; font-size: .7rem;
+                   font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+    .nav-item a {
+      display: flex; align-items: center; gap: 10px; padding: 9px 16px;
+      color: #94a3b8; text-decoration: none; border-radius: 8px; margin: 2px 8px;
+      font-size: .875rem; transition: all .15s;
+    }
+    .nav-item a:hover { background: rgba(99,102,241,.12); color: #fff; }
+    .nav-item a.active { background: var(--accent); color: #fff; }
+    .nav-item a .icon { width: 18px; text-align: center; }
+    .sidebar-bottom { margin-top: auto; padding: 12px 8px; border-top: 1px solid rgba(255,255,255,.07); }
+
+    /* ── Main ── */
+    .main { margin-left: 240px; padding: 28px; min-height: 100vh; }
+
+    .page-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;
+    }
+    .page-header h1 { font-size: 1.4rem; font-weight: 800; color: #0f172a; margin: 0; }
+
+    /* ── Stat row ── */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: #fff; border-radius: 12px; padding: 18px 20px;
+      border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px;
+    }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .stat-val { font-size: 1.6rem; font-weight: 800; color: #0f172a; line-height: 1; }
+    .stat-lbl { font-size: .75rem; color: #64748b; margin-top: 2px; }
+
+    /* ── Campaign cards ── */
+    .campaign-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; }
+
+    .campaign-card {
+      background: #fff; border-radius: 16px; border: 1px solid #e2e8f0;
+      overflow: hidden; transition: box-shadow .2s;
+    }
+    .campaign-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.07); }
+
+    .card-accent-bar { height: 4px; }
+    .status-DRAFT     .card-accent-bar { background: #94a3b8; }
+    .status-SCHEDULED .card-accent-bar { background: var(--orange); }
+    .status-RUNNING   .card-accent-bar { background: var(--green); }
+    .status-PAUSED    .card-accent-bar { background: var(--orange); }
+    .status-COMPLETED .card-accent-bar { background: var(--accent); }
+    .status-STOPPED   .card-accent-bar { background: var(--red); }
+
+    .card-body { padding: 20px; }
+    .card-title { font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+    .card-sub   { font-size: .8rem; color: #64748b; margin: 0 0 16px; }
+
+    /* Status badge */
+    .badge-status {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: .7rem; font-weight: 700; padding: 3px 9px;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .bs-DRAFT      { background: #f1f5f9; color: #64748b; }
+    .bs-SCHEDULED  { background: #fffbeb; color: #b45309; }
+    .bs-RUNNING    { background: #ecfdf5; color: #15803d; }
+    .bs-PAUSED     { background: #fffbeb; color: #b45309; }
+    .bs-COMPLETED  { background: #eff6ff; color: #1d4ed8; }
+    .bs-STOPPED    { background: #fef2f2; color: #dc2626; }
+
+    /* Progress bar */
+    .prog-wrap { margin: 12px 0; }
+    .prog-label { display: flex; justify-content: space-between; font-size: .75rem; color: #64748b; margin-bottom: 4px; }
+    .prog-bar { height: 8px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width .5s; }
+
+    /* Stat chips */
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+    .chip {
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 8px; padding: 5px 10px; font-size: .75rem; color: #374151;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .chip.green { background: #ecfdf5; border-color: #86efac; color: #15803d; }
+    .chip.red   { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+    .chip.blue  { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+
+    /* Action buttons */
+    .card-footer-actions {
+      display: flex; gap: 8px; padding: 14px 20px 18px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .btn-start {
+      background: var(--green); color: #fff; border: none;
+      padding: 8px 16px; border-radius: 8px; font-size: .82rem; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s;
+    }
+    .btn-start:hover { background: #059669; }
+    .btn-stop {
+      background: #fef2f2; color: var(--red); border: 1px solid #fca5a5;
+      padding: 8px 16px; border-radius: 8px; font-size: .82rem; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-stop:hover { background: #fee2e2; }
+
+    /* Pulse dot for RUNNING */
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      display: inline-block; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: .3; }
+    }
+
+    .window-tag {
+      font-size: .72rem; color: #64748b; margin-top: 8px;
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    /* ── Modals ── */
+    .modal-header-crm {
+      background: var(--sidebar-bg); color: #fff;
+      border: none; padding: 20px 24px;
+    }
+    .modal-title { font-weight: 700; font-size: 1rem; }
+    .form-label-crm { font-size: .82rem; font-weight: 600; color: #374151; margin-bottom: 5px; display: block; }
+    .form-control-crm {
+      border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px;
+      font-size: .875rem; color: #1e293b; width: 100%;
+      transition: border-color .15s; box-sizing: border-box;
+    }
+    .form-control-crm:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,.1); outline: none; }
+    .btn-primary-crm {
+      background: var(--accent); color: #fff; border: none;
+      padding: 10px 22px; border-radius: 8px; font-size: .88rem; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+    }
+    .btn-primary-crm:hover { background: var(--accent-h); color: #fff; }
+
+    /* Agent selector */
+    .agent-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+    .agent-btn {
+      width: 42px; height: 42px; border-radius: 10px; border: 2px solid #e2e8f0;
+      background: #f8fafc; font-size: .9rem; font-weight: 700; color: #64748b;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .agent-btn:hover, .agent-btn.selected {
+      border-color: var(--accent); background: #eff6ff; color: var(--accent);
+    }
+
+    @media (max-width: 900px) {
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+      .campaign-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <i class="fas fa-phone-volume icon"></i>
+    <div>
+      <div class="name">HR CRM</div>
+    </div>
+  </div>
+
+  <div class="nav-section">Calls</div>
+  <div class="nav-item"><a href="/calls"><span class="icon"><i class="fas fa-list"></i></span> Call Logs</a></div>
+
+  <div class="nav-section">AI Campaigns</div>
+  <div class="nav-item"><a href="/campaigns" class="active"><span class="icon"><i class="fas fa-robot"></i></span> Campaigns</a></div>
+
+  <div class="sidebar-bottom">
+    <form th:action="@{/logout}" method="post" style="margin:0 8px;">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <button type="submit"
+              style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 16px;
+                     background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:8px;
+                     color:#ef4444;font-size:.875rem;cursor:pointer;transition:all .15s;"
+              onmouseover="this.style.background='rgba(239,68,68,.15)';"
+              onmouseout="this.style.background='transparent';">
+        <span class="icon"><i class="fas fa-arrow-right-from-bracket"></i></span> Sign Out
+      </button>
+    </form>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <h1><i class="fas fa-robot" style="color:var(--accent);margin-right:10px;"></i>AI Calling Campaigns</h1>
+    <button class="btn-primary-crm" data-bs-toggle="modal" data-bs-target="#createModal">
+      <i class="fas fa-plus"></i> New Campaign
+    </button>
+  </div>
+
+  <!-- Flash messages -->
+  <div th:if="${success}" class="alert alert-dismissible fade show mb-4"
+       style="background:#f0fdf4;border:none;border-left:4px solid #16a34a;border-radius:10px;color:#15803d;padding:14px 18px;"
+       role="alert">
+    <i class="fas fa-circle-check" style="margin-right:8px;"></i>
+    <span th:text="${success}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${error}" class="alert alert-dismissible fade show mb-4"
+       style="background:#fef2f2;border:none;border-left:4px solid #dc2626;border-radius:10px;color:#dc2626;padding:14px 18px;"
+       role="alert">
+    <i class="fas fa-circle-exclamation" style="margin-right:8px;"></i>
+    <span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <!-- Summary stats -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#eff6ff;color:var(--accent);"><i class="fas fa-robot"></i></div>
+      <div>
+        <div class="stat-val" th:text="${campaigns.totalElements}">0</div>
+        <div class="stat-lbl">Total Campaigns</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#ecfdf5;color:#15803d;"><i class="fas fa-circle-play"></i></div>
+      <div>
+        <div class="stat-val"
+             th:text="${#lists.size(campaigns.content.?[status.name() == 'RUNNING'])}">0</div>
+        <div class="stat-lbl">Running Now</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fffbeb;color:#b45309;"><i class="fas fa-calendar-check"></i></div>
+      <div>
+        <div class="stat-val"
+             th:text="${#lists.size(campaigns.content.?[status.name() == 'SCHEDULED'])}">0</div>
+        <div class="stat-lbl">Scheduled</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#f0fdf4;color:#15803d;"><i class="fas fa-trophy"></i></div>
+      <div>
+        <div class="stat-val"
+             th:text="${#lists.size(campaigns.content.?[status.name() == 'COMPLETED'])}">0</div>
+        <div class="stat-lbl">Completed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campaign cards -->
+  <div class="campaign-grid" th:if="${!campaigns.isEmpty()}">
+    <div th:each="c : ${campaigns.content}"
+         th:classappend="'campaign-card status-' + ${c.status()}"
+         th:id="'card-' + ${c.id()}">
+
+      <div class="card-accent-bar"></div>
+      <div class="card-body">
+
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+          <div class="card-title" th:text="${c.name()}"></div>
+          <span class="badge-status"
+                th:classappend="'bs-' + ${c.status()}"
+                th:text="${c.status()}">DRAFT</span>
+        </div>
+
+        <p class="card-sub" th:text="${c.description()} ?: 'No description'"></p>
+
+        <!-- Config chips -->
+        <div class="chip-row">
+          <span class="chip blue">
+            <i class="fas fa-robot"></i>
+            <span th:text="${c.agentCount()} + ' agent' + (${c.agentCount()} > 1 ? 's' : '')"></span>
+          </span>
+          <span class="chip">
+            <i class="fas fa-filter"></i>
+            <span th:text="'Target: ' + ${c.targetLeadStatus()}"></span>
+          </span>
+          <span class="chip" th:if="${c.windowStart() != null}">
+            <i class="fas fa-clock"></i>
+            <span th:text="${c.windowStart()} + ' – ' + ${c.windowEnd()}"></span>
+          </span>
+          <span class="chip" th:if="${c.scheduledDate() != null}">
+            <i class="fas fa-calendar"></i>
+            <span th:text="${#temporals.format(c.scheduledDate(), 'dd MMM yyyy')}"></span>
+          </span>
+        </div>
+
+        <!-- Progress bar (visible when running/completed/stopped) -->
+        <div class="prog-wrap"
+             th:if="${c.status().name() == 'RUNNING' or c.status().name() == 'COMPLETED' or c.status().name() == 'STOPPED'}">
+          <div class="prog-label">
+            <span>
+              <span th:if="${c.status().name() == 'RUNNING'}">
+                <span class="pulse-dot"></span> Calling...
+              </span>
+              <span th:unless="${c.status().name() == 'RUNNING'}" th:text="${c.status()}"></span>
+            </span>
+            <span th:text="${c.calledCount()} + ' / ' + ${c.totalLeads()} + ' called'"></span>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill"
+                 th:id="'prog-' + ${c.id()}"
+                 th:style="'width:' + ${c.progressPct()} + '%'"></div>
+          </div>
+        </div>
+
+        <!-- Result chips -->
+        <div class="chip-row"
+             th:if="${c.calledCount() > 0}">
+          <span class="chip green">
+            <i class="fas fa-circle-check"></i>
+            <span th:text="${c.completedCount()} + ' completed'"></span>
+          </span>
+          <span class="chip red" th:if="${c.failedCount() > 0}">
+            <i class="fas fa-circle-xmark"></i>
+            <span th:text="${c.failedCount()} + ' failed'"></span>
+          </span>
+          <span class="chip" th:if="${c.startedAt() != null}">
+            <i class="fas fa-clock"></i>
+            Started <span th:text="${#temporals.format(c.startedAt(), 'dd MMM HH:mm')}"></span>
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Action footer -->
+      <div class="card-footer-actions">
+
+        <!-- Start button — shown for DRAFT and SCHEDULED -->
+        <form th:if="${c.status().name() == 'DRAFT' or c.status().name() == 'SCHEDULED'}"
+              th:action="@{/campaigns/{id}/start(id=${c.id()})}" method="post">
+          <button type="submit" class="btn-start">
+            <i class="fas fa-circle-play"></i> Start Now
+          </button>
+        </form>
+
+        <!-- Stop button — shown for RUNNING -->
+        <form th:if="${c.status().name() == 'RUNNING'}"
+              th:action="@{/campaigns/{id}/stop(id=${c.id()})}" method="post"
+              onsubmit="return confirm('Stop this campaign? Active calls will still complete.')">
+          <button type="submit" class="btn-stop">
+            <i class="fas fa-circle-stop"></i> Stop Campaign
+          </button>
+        </form>
+
+        <!-- Live progress counter (polled by JS) -->
+        <span th:if="${c.status().name() == 'RUNNING'}"
+              class="chip blue"
+              th:id="'counter-' + ${c.id()}"
+              style="margin-left:auto;">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span th:text="${c.calledCount()} + ' called'"></span>
+        </span>
+
+      </div>
+    </div><!-- /.campaign-card -->
+  </div>
+
+  <!-- Empty state -->
+  <div th:if="${campaigns.isEmpty()}"
+       style="text-align:center;padding:80px 20px;color:#94a3b8;">
+    <i class="fas fa-robot" style="font-size:3rem;opacity:.3;display:block;margin-bottom:16px;"></i>
+    <h5 style="font-weight:700;color:#1e293b;">No campaigns yet</h5>
+    <p style="margin-bottom:20px;">Create your first AI campaign to start calling leads automatically.</p>
+    <button class="btn-primary-crm" data-bs-toggle="modal" data-bs-target="#createModal">
+      <i class="fas fa-plus"></i> Create Campaign
+    </button>
+  </div>
+
+</div><!-- /.main -->
+
+<!-- ── CREATE CAMPAIGN MODAL ── -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;">
+      <div class="modal-header-crm">
+        <h5 class="modal-title">
+          <i class="fas fa-robot" style="color:#a5b4fc;margin-right:8px;"></i>Create AI Campaign
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="padding:28px;">
+        <form th:action="@{/campaigns}" method="post">
+
+          <div class="row g-3">
+
+            <!-- Name -->
+            <div class="col-12">
+              <label class="form-label-crm">Campaign Name <span style="color:#ef4444;">*</span></label>
+              <input type="text" name="name" class="form-control-crm"
+                     placeholder="e.g. March Java Devs Campaign" required>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label-crm">Description</label>
+              <input type="text" name="description" class="form-control-crm"
+                     placeholder="Optional notes about this campaign">
+            </div>
+
+            <!-- Agent count -->
+            <div class="col-12">
+              <label class="form-label-crm">
+                <i class="fas fa-robot" style="color:var(--accent);margin-right:5px;"></i>
+                Parallel AI Agents
+                <span style="font-weight:400;color:#64748b;font-size:.78rem;">(1–10 simultaneous calls)</span>
+              </label>
+              <div class="agent-selector" id="agentSelector">
+                <button th:each="n : ${#numbers.sequence(1,10)}"
+                        type="button"
+                        th:text="${n}"
+                        th:class="${n == 1} ? 'agent-btn selected' : 'agent-btn'"
+                        th:data-val="${n}"
+                        onclick="selectAgent(this)"></button>
+              </div>
+              <input type="hidden" name="agentCount" id="agentCountInput" value="1">
+            </div>
+
+            <!-- Target lead status -->
+            <div class="col-md-6">
+              <label class="form-label-crm">Target Lead Status</label>
+              <select name="targetLeadStatus" class="form-control-crm">
+                <option value="NEW">New leads</option>
+                <option value="CONTACTED">Contacted (follow-up)</option>
+                <option value="INTERESTED">Interested (warm call-back)</option>
+              </select>
+            </div>
+
+            <!-- Scheduled date (optional) -->
+            <div class="col-md-6">
+              <label class="form-label-crm">Auto-Start Date
+                <span style="font-weight:400;color:#64748b;font-size:.78rem;">(leave blank for manual)</span>
+              </label>
+              <input type="date" name="scheduledDate" class="form-control-crm">
+            </div>
+
+            <!-- Time window -->
+            <div class="col-md-6">
+              <label class="form-label-crm">
+                <i class="fas fa-clock" style="color:var(--accent);margin-right:4px;"></i>
+                Calling Window Start
+              </label>
+              <input type="time" name="windowStart" class="form-control-crm" value="09:00">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-crm">
+                <i class="fas fa-clock" style="color:var(--accent);margin-right:4px;"></i>
+                Calling Window End
+              </label>
+              <input type="time" name="windowEnd" class="form-control-crm" value="18:00">
+            </div>
+
+          </div>
+
+          <!-- Info note -->
+          <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;margin-top:20px;font-size:.82rem;">
+            <i class="fas fa-circle-info" style="color:var(--accent);margin-right:6px;"></i>
+            <strong>How it works:</strong> When started, AI agents will call leads one by one,
+            play a recruitment script, and update the lead status based on the response (1 = Interested, 2 = Not Interested).
+            The campaign auto-stops when the window ends or all leads are called.
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn-primary-crm">
+              <i class="fas fa-rocket"></i> Create Campaign
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── Agent count selector ──────────────────────────────────────────────────
+  function selectAgent(btn) {
+    document.querySelectorAll('.agent-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('agentCountInput').value = btn.dataset.val;
+  }
+
+  // ── Live progress polling for RUNNING campaigns ───────────────────────────
+  var runningCampaigns = [];
+  document.querySelectorAll('[id^="card-"]').forEach(function(card) {
+    if (card.classList.contains('status-RUNNING')) {
+      var id = card.id.replace('card-', '');
+      runningCampaigns.push(id);
+    }
+  });
+
+  function pollCampaigns() {
+    runningCampaigns.forEach(function(id) {
+      fetch('/api/campaigns/' + id + '/status')
+        .then(function(r) { return r.json(); })
+        .then(function(c) {
+          // Update progress bar
+          var pct   = c.totalLeads > 0 ? Math.min(100, Math.round(c.calledCount * 100 / c.totalLeads)) : 0;
+          var prog  = document.getElementById('prog-' + id);
+          var counter = document.getElementById('counter-' + id);
+          if (prog) prog.style.width = pct + '%';
+          if (counter) {
+            counter.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + c.calledCount + ' called';
+          }
+          // If campaign no longer running, reload to show final state
+          if (c.status !== 'RUNNING') {
+            window.location.reload();
+          }
+        })
+        .catch(function() {});
+    });
+  }
+
+  if (runningCampaigns.length > 0) {
+    setInterval(pollCampaigns, 3000);
+  }
+</script>
+</body>
+</html>

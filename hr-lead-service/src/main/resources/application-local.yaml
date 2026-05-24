@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:/hrleaddb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      schema: PUBLIC
+      maximum-pool-size: 5
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+  flyway:
+    enabled: false
+  security:
+    user:
+      name: admin
+      password: admin
+
+services:
+  calling-service:
+    url: ${CALLING_SERVICE_URL:http://localhost:8083}

@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leads | HR CRM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #0f172a;
+            --accent:     #6366f1;
+            --accent-hover: #4f46e5;
+            --surface:    #ffffff;
+            --bg:         #f1f5f9;
+            --text:       #1e293b;
+            --muted:      #64748b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: Inter, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .sidebar-brand {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .sidebar-brand .logo-text {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-brand .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .sidebar-section {
+            padding: 20px 14px 8px;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #475569;
+            font-weight: 700;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .sidebar-link:hover { background: rgba(255,255,255,0.06); color: white; }
+        .sidebar-link.active { background: var(--accent); color: white; }
+        .sidebar-link i { width: 16px; text-align: center; }
+
+        /* ── MAIN ── */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .topbar h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary-crm {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 9px 20px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: background 0.15s;
+            text-decoration: none;
+        }
+
+        .btn-primary-crm:hover { background: var(--accent-hover); color: white; }
+
+        .btn-secondary-crm {
+            background: white;
+            color: var(--text);
+            border: 1.5px solid #e2e8f0;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.15s;
+        }
+
+        .btn-secondary-crm:hover { border-color: var(--accent); color: var(--accent); }
+
+        .csv-drop-zone {
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .csv-drop-zone:hover, .csv-drop-zone.dragover {
+            border-color: var(--accent);
+            background: #eff6ff;
+        }
+
+        .csv-drop-zone i { font-size: 2rem; color: var(--muted); margin-bottom: 10px; display: block; }
+        .csv-drop-zone .dz-title { font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .csv-drop-zone .dz-sub { font-size: 0.8rem; color: var(--muted); }
+
+        .recruiter-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #f5f3ff; color: #7c3aed;
+            font-size: 0.72rem; font-weight: 700;
+            padding: 3px 8px; border-radius: 10px;
+        }
+
+        .auto-badge {
+            background: #f0fdf4; color: #15803d;
+            font-size: 0.72rem; font-weight: 700;
+            padding: 3px 8px; border-radius: 10px;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+
+        /* ── CONTENT ── */
+        .content { padding: 28px; flex: 1; }
+
+        /* ── PIPELINE CARDS ── */
+        .pipeline-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            display: block;
+        }
+
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+        .stat-card.active-filter { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+
+        .stat-card .stat-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-count {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-card .stat-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        /* ── FILTER BAR ── */
+        .filter-bar {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select, .filter-bar input {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 0.85rem;
+            color: var(--text);
+            background: #f8fafc;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .filter-bar select:focus, .filter-bar input:focus {
+            border-color: var(--accent);
+        }
+
+        .filter-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .btn-clear {
+            font-size: 0.82rem;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            transition: all 0.15s;
+        }
+
+        .btn-clear:hover { color: #dc2626; border-color: #fca5a5; }
+
+        /* ── TABLE ── */
+        .table-card {
+            background: white;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .table {
+            margin: 0;
+            font-size: 0.875rem;
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            border-top: none;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            padding: 14px 16px;
+            border-color: #f1f5f9;
+            vertical-align: middle;
+            color: var(--text);
+        }
+
+        .table tbody tr:hover { background: #fafbff; }
+        .table tbody tr:last-child td { border-bottom: none; }
+
+        .lead-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .lead-sub {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* STATUS BADGES */
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .s-NEW            { background: #eff6ff; color: #1d4ed8; }
+        .s-CONTACTED      { background: #f5f3ff; color: #7c3aed; }
+        .s-INTERESTED     { background: #fffbeb; color: #b45309; }
+        .s-CONVERTED      { background: #f0fdf4; color: #15803d; }
+        .s-NOT_INTERESTED { background: #fff7ed; color: #c2410c; }
+        .s-CLOSED         { background: #f1f5f9; color: #475569; }
+
+        /* AI LABEL BADGES */
+        .badge-ai {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .ai-HOT  { background: #fef2f2; color: #dc2626; }
+        .ai-WARM { background: #fff7ed; color: #ea580c; }
+        .ai-COLD { background: #eff6ff; color: #2563eb; }
+
+        .source-pill {
+            background: #f1f5f9;
+            color: #475569;
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            width: 32px; height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+            font-size: 0.82rem;
+        }
+
+        .action-btn:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+        .action-btn.danger:hover { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--muted);
+        }
+
+        .empty-state i { font-size: 3rem; margin-bottom: 16px; display: block; opacity: 0.4; }
+        .empty-state h6 { font-weight: 700; color: var(--text); margin-bottom: 6px; }
+
+        /* PAGINATION */
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.83rem;
+            color: var(--muted);
+        }
+
+        .page-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            color: var(--text);
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+
+        .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .page-btn.disabled { opacity: 0.4; pointer-events: none; }
+
+        /* ── MODAL ── */
+        .modal-header-crm {
+            background: var(--sidebar-bg);
+            color: white;
+            border: none;
+            padding: 20px 24px;
+        }
+
+        .modal-header-crm .modal-title { font-weight: 700; font-size: 1rem; }
+        .modal-header-crm .btn-close { filter: brightness(0) invert(1); opacity: 0.7; }
+
+        .form-label-crm {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .form-control-crm {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 9px 12px;
+            font-size: 0.875rem;
+            color: var(--text);
+            transition: border-color 0.15s;
+        }
+
+        .form-control-crm:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+            outline: none;
+        }
+
+        @media (max-width: 1200px) {
+            .pipeline-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <a href="/dashboard" class="logo-text">
+            <div class="logo-icon"><i class="fas fa-users"></i></div>
+            HR CRM
+        </a>
+    </div>
+
+    <div class="sidebar-section">Overview</div>
+    <a href="/dashboard" class="sidebar-link">
+        <i class="fas fa-house"></i> Dashboard
+    </a>
+
+    <div class="sidebar-section">Pipeline</div>
+    <a href="/leads" class="sidebar-link active">
+        <i class="fas fa-layer-group"></i> All Leads
+    </a>
+    <a href="/leads?status=NEW" class="sidebar-link">
+        <i class="fas fa-circle-plus"></i> New
+    </a>
+    <a href="/leads?status=CONTACTED" class="sidebar-link">
+        <i class="fas fa-phone-flip"></i> Contacted
+    </a>
+    <a href="/leads?status=INTERESTED" class="sidebar-link">
+        <i class="fas fa-star"></i> Interested
+    </a>
+    <a href="/leads?status=CONVERTED" class="sidebar-link">
+        <i class="fas fa-trophy"></i> Converted
+    </a>
+    <a href="/leads?status=CLOSED" class="sidebar-link">
+        <i class="fas fa-lock"></i> Closed
+    </a>
+
+    <div class="sidebar-section">Team</div>
+    <a href="/recruiters" class="sidebar-link">
+        <i class="fas fa-user-tie"></i> Recruiters
+    </a>
+
+    <div style="margin-top:auto;padding:16px 8px;border-top:1px solid rgba(255,255,255,0.07);">
+        <a href="/logout" class="sidebar-link" style="color:#ef4444;">
+            <i class="fas fa-arrow-right-from-bracket"></i> Sign Out
+        </a>
+    </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <h1><i class="fas fa-layer-group" style="color:var(--accent);margin-right:8px;"></i>Lead Pipeline</h1>
+        <div class="topbar-actions">
+            <button class="btn-secondary-crm" data-bs-toggle="modal" data-bs-target="#csvModal">
+                <i class="fas fa-file-csv"></i> Import CSV
+            </button>
+            <button class="btn-primary-crm" data-bs-toggle="modal" data-bs-target="#addLeadModal">
+                <i class="fas fa-plus"></i> Add Lead
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- FLASH MESSAGES -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show"
+             style="border-radius:10px;border:none;background:#f0fdf4;color:#15803d;border-left:4px solid #16a34a;padding:14px 18px;margin-bottom:20px;"
+             role="alert">
+            <i class="fas fa-circle-check" style="margin-right:8px;"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding:16px;"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-dismissible fade show"
+             style="border-radius:10px;border:none;background:#fef2f2;color:#dc2626;border-left:4px solid #dc2626;padding:14px 18px;margin-bottom:20px;"
+             role="alert">
+            <i class="fas fa-circle-exclamation" style="margin-right:8px;"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding:16px;"></button>
+        </div>
+
+        <!-- IMPORT ERRORS -->
+        <div th:if="${importErrors}" class="alert alert-dismissible fade show"
+             style="background:#fffbeb;border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;margin-bottom:20px;border:none;"
+             role="alert">
+            <div style="font-weight:700;color:#b45309;margin-bottom:8px;">
+                <i class="fas fa-triangle-exclamation" style="margin-right:6px;"></i>Some rows were skipped:
+            </div>
+            <ul style="margin:0;padding-left:18px;font-size:0.82rem;color:#92400e;">
+                <li th:each="err : ${importErrors}" th:text="${err}"></li>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" style="position:absolute;top:14px;right:14px;"></button>
+        </div>
+
+        <!-- PIPELINE STATS -->
+        <div class="pipeline-grid">
+            <a th:each="status : ${statuses}"
+               th:href="@{/leads(status=${status})}"
+               class="stat-card"
+               th:classappend="${selectedStatus != null and selectedStatus == status} ? ' active-filter'">
+                <div class="stat-label">
+                    <span class="stat-dot"
+                          th:style="${status.name() == 'NEW'} ? 'background:#1d4ed8' :
+                                     (${status.name() == 'CONTACTED'} ? 'background:#7c3aed' :
+                                     (${status.name() == 'INTERESTED'} ? 'background:#b45309' :
+                                     (${status.name() == 'CONVERTED'} ? 'background:#15803d' :
+                                     (${status.name() == 'NOT_INTERESTED'} ? 'background:#c2410c' : 'background:#475569'))))">
+                    </span>
+                    <span th:text="${#strings.replace(status.name(), '_', ' ')}"></span>
+                </div>
+                <div class="stat-count"
+                     th:text="${stats.countByStatus().getOrDefault(status.name(), 0)}">0</div>
+            </a>
+        </div>
+
+        <!-- FILTER BAR -->
+        <form method="get" action="/leads" class="filter-bar">
+            <span class="filter-label">Filter:</span>
+            <select name="status" class="form-control-crm" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option th:each="s : ${statuses}"
+                        th:value="${s}"
+                        th:text="${#strings.replace(s.name(), '_', ' ')}"
+                        th:selected="${selectedStatus == s}"></option>
+            </select>
+            <a th:if="${selectedStatus != null}" href="/leads" class="btn-clear">
+                <i class="fas fa-times" style="margin-right:4px;"></i>Clear
+            </a>
+            <span style="margin-left:auto;font-size:0.82rem;color:var(--muted);"
+                  th:text="${leads.totalElements} + ' leads'"></span>
+        </form>
+
+        <!-- LEADS TABLE -->
+        <div class="table-card">
+            <table class="table" th:if="${!leads.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>Lead</th>
+                        <th>Contact</th>
+                        <th>Position</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                        <th>Recruiter</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="lead : ${leads.content}">
+                        <td>
+                            <div class="lead-name" th:text="${lead.name()}"></div>
+                            <div class="lead-sub" th:text="${lead.company()} ?: '—'"></div>
+                        </td>
+                        <td>
+                            <div th:text="${lead.phone()}"></div>
+                            <div class="lead-sub" th:text="${lead.email()} ?: ''"></div>
+                        </td>
+                        <td>
+                            <span th:text="${lead.positionRequired()} ?: '—'" style="color:var(--muted);"></span>
+                        </td>
+                        <td>
+                            <span class="badge-status"
+                                  th:classappend="'s-' + ${lead.status()}"
+                                  th:text="${#strings.replace(lead.status().name(), '_', ' ')}"></span>
+                        </td>
+                        <td>
+                            <span class="source-pill"
+                                  th:text="${lead.source() != null} ? ${#strings.replace(lead.source().name(), '_', ' ')} : '—'"></span>
+                        </td>
+                        <td>
+                            <span th:if="${lead.recruiterId() != null}" class="recruiter-badge">
+                                <i class="fas fa-user-tie"></i>
+                                <span th:text="'#' + ${lead.recruiterId()}"></span>
+                            </span>
+                            <span th:unless="${lead.recruiterId() != null}" class="auto-badge">
+                                <i class="fas fa-rotate"></i> Unassigned
+                            </span>
+                        </td>
+                        <td style="color:var(--muted);white-space:nowrap;"
+                            th:text="${#temporals.format(lead.createdAt(), 'dd MMM yyyy')}"></td>
+                        <td>
+                            <div style="display:flex;gap:6px;">
+                                <a th:href="@{/leads/{id}(id=${lead.id()})}" class="action-btn" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                                <form th:action="@{/leads/{id}/delete(id=${lead.id()})}" method="post"
+                                      onsubmit="return confirm('Delete this lead?')">
+                                    <button type="submit" class="action-btn danger" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- EMPTY STATE -->
+            <div class="empty-state" th:if="${leads.isEmpty()}">
+                <i class="fas fa-users-slash"></i>
+                <h6>No leads found</h6>
+                <p th:if="${selectedStatus != null}">No leads with status
+                    <strong th:text="${selectedStatus}"></strong>. Try another filter.
+                </p>
+                <p th:unless="${selectedStatus != null}">Get started by adding your first lead.</p>
+                <button class="btn-primary-crm" style="margin-top:8px;"
+                        data-bs-toggle="modal" data-bs-target="#addLeadModal">
+                    <i class="fas fa-plus"></i> Add Lead
+                </button>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="pagination-bar" th:if="${!leads.isEmpty()}">
+                <span>
+                    Showing <strong th:text="${leads.numberOfElements}"></strong>
+                    of <strong th:text="${leads.totalElements}"></strong> leads
+                </span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <a th:href="@{/leads(status=${selectedStatus},page=${leads.number - 1})}"
+                       class="page-btn"
+                       th:classappend="${leads.first} ? ' disabled'">
+                        <i class="fas fa-chevron-left"></i> Prev
+                    </a>
+                    <span style="font-size:0.83rem;"
+                          th:text="'Page ' + ${leads.number + 1} + ' of ' + ${leads.totalPages}"></span>
+                    <a th:href="@{/leads(status=${selectedStatus},page=${leads.number + 1})}"
+                       class="page-btn"
+                       th:classappend="${leads.last} ? ' disabled'">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ── CSV IMPORT MODAL ── -->
+<div class="modal fade" id="csvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;">
+            <div class="modal-header-crm">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-csv" style="color:#a5b4fc;margin-right:8px;"></i>Import Leads from CSV
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:28px;">
+                <!-- FORMAT HINT -->
+                <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:0.82rem;">
+                    <div style="font-weight:700;color:var(--text);margin-bottom:6px;">
+                        <i class="fas fa-circle-info" style="color:var(--accent);margin-right:6px;"></i>Expected CSV format
+                    </div>
+                    <code style="color:#7c3aed;font-size:0.78rem;">name, phone, email, company, positionRequired, source</code>
+                    <div style="color:var(--muted);margin-top:6px;">
+                        Header row required. <code>source</code> values: REFERRAL, PORTAL, WALK_IN, COLD_CALL, SOCIAL_MEDIA, OTHER (or leave blank).
+                        Leads with duplicate phone/email are skipped automatically.
+                    </div>
+                </div>
+
+                <form th:action="@{/leads/import}" method="post" enctype="multipart/form-data" id="csvForm">
+                    <div class="csv-drop-zone" id="dropZone" onclick="document.getElementById('csvFile').click()">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                        <div class="dz-title">Click to choose a file</div>
+                        <div class="dz-sub" id="fileLabel">or drag and drop your CSV here</div>
+                    </div>
+                    <input type="file" name="file" id="csvFile" accept=".csv,text/csv"
+                           style="display:none;" onchange="onFileSelected(this)">
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="importBtn" class="btn-primary-crm" disabled>
+                            <i class="fas fa-upload"></i> Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── ADD LEAD MODAL ── -->
+<div class="modal fade" id="addLeadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;">
+            <div class="modal-header-crm">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus" style="color:#a5b4fc;margin-right:8px;"></i>Add New Lead
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:28px;">
+                <form th:action="@{/leads}" method="post">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Full Name <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="name" class="form-control form-control-crm"
+                                   placeholder="e.g. Priya Sharma" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Phone <span style="color:#ef4444;">*</span></label>
+                            <input type="text" name="phone" class="form-control form-control-crm"
+                                   placeholder="+91 98765 43210" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Email</label>
+                            <input type="email" name="email" class="form-control form-control-crm"
+                                   placeholder="priya@company.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Company</label>
+                            <input type="text" name="company" class="form-control form-control-crm"
+                                   placeholder="Company name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Position Required</label>
+                            <input type="text" name="positionRequired" class="form-control form-control-crm"
+                                   placeholder="e.g. Senior Java Developer">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Lead Source</label>
+                            <select name="source" class="form-select form-control-crm">
+                                <option value="">— Select source —</option>
+                                <option th:each="src : ${sources}"
+                                        th:value="${src}"
+                                        th:text="${#strings.replace(src.name(), '_', ' ')}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-crm">Recruiter</label>
+                            <!-- Hidden field carries the actual recruiter ID for form submission -->
+                            <input type="hidden" name="recruiterId" id="recruiterIdInput">
+                            <!-- Visible autocomplete text field -->
+                            <div style="position:relative;">
+                                <input type="text"
+                                       id="recruiterSearch"
+                                       class="form-control form-control-crm"
+                                       placeholder="Type recruiter name..."
+                                       autocomplete="off"
+                                       oninput="onRecruiterInput(this.value)">
+                                <div id="recruiterDropdown"
+                                     style="display:none;position:absolute;left:0;right:0;top:100%;z-index:1050;
+                                            background:white;border:1.5px solid #e2e8f0;border-radius:8px;
+                                            box-shadow:0 8px 24px rgba(0,0,0,0.1);max-height:200px;overflow-y:auto;">
+                                </div>
+                            </div>
+                            <div style="font-size:0.75rem;color:var(--muted);margin-top:4px;">
+                                Leave blank to auto-assign via round-robin
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-primary-crm">
+                            <i class="fas fa-save"></i> Create Lead
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function onFileSelected(input) {
+        var btn = document.getElementById('importBtn');
+        var label = document.getElementById('fileLabel');
+        if (input.files && input.files[0]) {
+            label.textContent = input.files[0].name;
+            btn.disabled = false;
+        } else {
+            label.textContent = 'or drag and drop your CSV here';
+            btn.disabled = true;
+        }
+    }
+
+    var dz = document.getElementById('dropZone');
+    dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', function() { dz.classList.remove('dragover'); });
+    dz.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        var file = e.dataTransfer.files[0];
+        if (file) {
+            var input = document.getElementById('csvFile');
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+            onFileSelected(input);
+        }
+    });
+
+    // ── RECRUITER AUTOCOMPLETE ────────────────────────────────────────────────
+    var recruiterTimer = null;
+
+    function onRecruiterInput(value) {
+        clearTimeout(recruiterTimer);
+        var dropdown = document.getElementById('recruiterDropdown');
+        var hiddenInput = document.getElementById('recruiterIdInput');
+
+        // Clear previous selection when user types again
+        hiddenInput.value = '';
+
+        if (value.trim().length < 1) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        recruiterTimer = setTimeout(function() {
+            fetch('/api/recruiters/search?name=' + encodeURIComponent(value))
+                .then(function(res) { return res.json(); })
+                .then(function(results) {
+                    renderRecruiterDropdown(results, dropdown);
+                })
+                .catch(function() { dropdown.style.display = 'none'; });
+        }, 220);
+    }
+
+    function renderRecruiterDropdown(results, dropdown) {
+        dropdown.innerHTML = '';
+        if (results.length === 0) {
+            dropdown.innerHTML =
+                '<div style="padding:12px 14px;font-size:0.83rem;color:#64748b;">' +
+                '<i class="fas fa-magnifying-glass" style="margin-right:6px;"></i>No recruiters found</div>';
+        } else {
+            results.forEach(function(r) {
+                var item = document.createElement('div');
+                item.style.cssText =
+                    'padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;' +
+                    'font-size:0.875rem;border-bottom:1px solid #f1f5f9;';
+                item.innerHTML =
+                    '<span style="width:28px;height:28px;background:#eff6ff;border-radius:8px;' +
+                    'display:inline-flex;align-items:center;justify-content:center;color:#6366f1;font-size:0.75rem;flex-shrink:0;">' +
+                    '<i class="fas fa-user-tie"></i></span>' +
+                    '<div><div style="font-weight:600;color:#1e293b;">' + escHtml(r.name) + '</div>' +
+                    (r.email ? '<div style="font-size:0.75rem;color:#64748b;">' + escHtml(r.email) + '</div>' : '') +
+                    '</div>' +
+                    '<span style="margin-left:auto;font-size:0.72rem;background:#eff6ff;color:#6366f1;' +
+                    'padding:2px 8px;border-radius:8px;font-weight:700;">' + r.leadsAssigned + ' leads</span>';
+
+                item.addEventListener('mouseenter', function() { item.style.background = '#f8fafc'; });
+                item.addEventListener('mouseleave', function() { item.style.background = ''; });
+                item.addEventListener('click', function() {
+                    document.getElementById('recruiterIdInput').value = r.id;
+                    document.getElementById('recruiterSearch').value = r.name;
+                    dropdown.style.display = 'none';
+                });
+                dropdown.appendChild(item);
+            });
+        }
+        dropdown.style.display = 'block';
+    }
+
+    function escHtml(str) {
+        var d = document.createElement('div');
+        d.textContent = str || '';
+        return d.innerHTML;
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        var dropdown = document.getElementById('recruiterDropdown');
+        var searchInput = document.getElementById('recruiterSearch');
+        if (dropdown && searchInput && !dropdown.contains(e.target) && e.target !== searchInput) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Reset recruiter field when Add Lead modal opens/closes
+    var addLeadModal = document.getElementById('addLeadModal');
+    if (addLeadModal) {
+        addLeadModal.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('recruiterSearch').value = '';
+            document.getElementById('recruiterIdInput').value = '';
+            document.getElementById('recruiterDropdown').style.display = 'none';
+        });
+    }
+</script>
+</body>
+</html>

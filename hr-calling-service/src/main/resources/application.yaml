@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: hr-calling-service
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource:
+    url: ${DB_URL:jdbc:postgresql}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    driver-class-name: org.postgresql.Driver
+
+server:
+  port: 8083
+
+registry:
+  enabled: true
+  url: ${REGISTRY_URL:http://localhost:8761}
+  service-name: hr-calling-service
+  service-url: ${SERVICE_URL:http://localhost:8083}
+
+# ── Calling provider selector ──────────────────────────────────────────────────
+# Change this ONE property to switch providers. Valid: twilio | plivo | telnyx
+calling:
+  provider: ${CALLING_PROVIDER:twilio}
+
+# ── Twilio (default provider) ──────────────────────────────────────────────────
+twilio:
+  account-sid:      ${TWILIO_ACCOUNT_SID:}
+  auth-token:       ${TWILIO_AUTH_TOKEN:}
+  from-number:      ${TWILIO_FROM_NUMBER:}
+  twiml-app-sid:    ${TWILIO_TWIML_APP_SID:}
+  api-key-sid:      ${TWILIO_API_KEY_SID:}
+  api-key-secret:   ${TWILIO_API_KEY_SECRET:}
+  webhook-base-url: ${TWILIO_WEBHOOK_BASE_URL:}
+
+# ── Plivo ──────────────────────────────────────────────────────────────────────
+# Uncomment and set env vars when calling.provider=plivo
+plivo:
+  auth-id:          ${PLIVO_AUTH_ID:}
+  auth-token:       ${PLIVO_AUTH_TOKEN:}
+  from-number:      ${PLIVO_FROM_NUMBER:}
+  webhook-base-url: ${PLIVO_WEBHOOK_BASE_URL:}
+
+# ── Telnyx ─────────────────────────────────────────────────────────────────────
+# Uncomment and set env vars when calling.provider=telnyx
+telnyx:
+  api-key:            ${TELNYX_API_KEY:}
+  connection-id:      ${TELNYX_CONNECTION_ID:}
+  from-number:        ${TELNYX_FROM_NUMBER:}
+  webhook-base-url:   ${TELNYX_WEBHOOK_BASE_URL:}
+  webhook-public-key: ${TELNYX_WEBHOOK_PUBLIC_KEY:}
+
+encryption:
+  key: ${ENCRYPTION_KEY}
+
+services:
+  lead-service:
+    # Fallback when registry is disabled or lead-service is not yet registered.
+    # Registry resolution takes precedence at runtime when registry.enabled=true.
+    url: ${LEAD_SERVICE_URL:http://localhost:8081}
+
+logging:
+  level:
+    root: INFO
+    com.fms.hr_crm: DEBUG
+
